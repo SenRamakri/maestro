@@ -1021,9 +1021,12 @@ func TestFanout2Multi(t *testing.T) {
 		for {
 			fmt.Println("listener() at top of loop.")
 			ok, subchan := sub.GetChannel()
+			fmt.Println("listener() got chan.")
 			if ok {
+				fmt.Println("listener() bf select.")	
 				select {
 				case ev := <-subchan:
+					fmt.Println("listener() bf ev.Data.")	
 					sdata, ok := ev.Data.(*dat)
 					if ok {
 						fmt.Printf("listener: Got event %d\n", sdata.x)
@@ -1093,8 +1096,11 @@ func TestFanout2Multi(t *testing.T) {
 		names := []string{"stuff2"}
 		fmt.Println("@SubmitEvent 1")
 		needlatch(hook)
+		fmt.Println("@SubmitEvent bf hook2")
 		needlatch(hook2)
+		fmt.Println("@SubmitEvent bf SubmitEvent")
 		dropped, err2 := SubmitEvent(names, d)
+		fmt.Println("@SubmitEvent 1 done")
 		if err2 != nil {
 			log.Fatalf("Error on SubmitEvent channel: %+v", err)
 			t.FailNow()

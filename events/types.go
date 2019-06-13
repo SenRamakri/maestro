@@ -233,13 +233,19 @@ func (channel *eventChannel) getSlaveByID(id string) (ret *slaveChannel, ok bool
 }
 
 func (slave *slaveChannel) GetChannel() (ok bool, ret chan *MaestroEvent) {
+	fmt.Println("GetChannel: locking")
 	slave.refs.lock()
+	fmt.Println("GetChannel: locked")
 	// ok = !slave.closed
 	ok = slave.ifOpenLock()
+	fmt.Println("GetChannel: after ifOpenLock")
 	if ok {
 		ret = slave.output
+		fmt.Println("GetChannel: got ret")
 		slave.openedUnlock()
+		fmt.Println("GetChannel: after openedUnlock")
 		slave.refs.refAndUnlock()
+		fmt.Println("GetChannel: after refAndUnlock")
 	} else {
 		slave.refs.unlock()
 	}
