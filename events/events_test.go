@@ -1014,16 +1014,20 @@ func TestFanout2Multi(t *testing.T) {
 	hook2 := newLatch(1)
 
 	t.Run("listener", func(t *testing.T) {
+		latchon(hook)
 		t.Parallel()
 		x := 0
-		latchon(hook)
+		
 	listenLoop:
 		for {
 			fmt.Println("listener() at top of loop.")
 			ok, subchan := sub.GetChannel()
+			fmt.Println("listener() got chan.")
 			if ok {
+				fmt.Println("listener() bf select.")	
 				select {
 				case ev := <-subchan:
+					fmt.Println("listener() bf ev.Data.")	
 					sdata, ok := ev.Data.(*dat)
 					if ok {
 						fmt.Printf("listener: Got event %d\n", sdata.x)
@@ -1050,9 +1054,13 @@ func TestFanout2Multi(t *testing.T) {
 	})
 
 	t.Run("listener2", func(t *testing.T) {
-		t.Parallel()
-		x := 0
+		fmt.Println("listener2() at top of loop 0.")
 		latchon(hook2)
+		fmt.Println("listener2() at top of loop 2.")
+		t.Parallel()
+		fmt.Println("listener2() at top of loop 1.")
+		x := 0
+		
 	listenLoop:
 		for {
 			fmt.Println("listener2() at top of loop.")
@@ -1093,8 +1101,11 @@ func TestFanout2Multi(t *testing.T) {
 		names := []string{"stuff2"}
 		fmt.Println("@SubmitEvent 1")
 		needlatch(hook)
+		fmt.Println("@SubmitEvent bf hook2")
 		needlatch(hook2)
+		fmt.Println("@SubmitEvent bf SubmitEvent")
 		dropped, err2 := SubmitEvent(names, d)
+		fmt.Println("@SubmitEvent 1 done")
 		if err2 != nil {
 			log.Fatalf("Error on SubmitEvent channel: %+v", err)
 			t.FailNow()
