@@ -1014,9 +1014,10 @@ func TestFanout2Multi(t *testing.T) {
 	hook2 := newLatch(1)
 
 	t.Run("listener", func(t *testing.T) {
+		latchon(hook)
 		t.Parallel()
 		x := 0
-		latchon(hook)
+		
 	listenLoop:
 		for {
 			fmt.Println("listener() at top of loop.")
@@ -1054,11 +1055,12 @@ func TestFanout2Multi(t *testing.T) {
 
 	t.Run("listener2", func(t *testing.T) {
 		fmt.Println("listener2() at top of loop 0.")
+		latchon(hook2)
+		fmt.Println("listener2() at top of loop 2.")
 		t.Parallel()
 		fmt.Println("listener2() at top of loop 1.")
 		x := 0
-		latchon(hook2)
-		fmt.Println("listener2() at top of loop 2.")
+		
 	listenLoop:
 		for {
 			fmt.Println("listener2() at top of loop.")
