@@ -37,15 +37,16 @@ func TestLoadFromFile(t *testing.T) {
 	}
 }
 
-func TestConfigVarRead(t *testing.T) {
+const CONFIG_CLIENT_ID = "WWRL000001"
+func TestConfigClientIdVar(t *testing.T) {
 	config_loader := new(YAMLMaestroConfig)
 	err := config_loader.LoadFromFile("../test-assets/wwrelay-config.yaml")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 		t.FailNow()
 	} else {
-		if(strings.Compare(config_loader.ClientId, "WWRL000001") != 0) {
-			fmt.Printf("clientId from config = %+v expected:WWRL000001\n", config_loader.ClientId)
+		if(strings.Compare(config_loader.ClientId, CONFIG_CLIENT_ID) != 0) {
+			fmt.Printf("clientId from config = %+v expected:%s\n", config_loader.ClientId, CONFIG_CLIENT_ID)
 			t.FailNow()
 		} else {
 			fmt.Printf("clientId from config = %+v\n", config_loader.ClientId)
