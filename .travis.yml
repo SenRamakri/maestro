@@ -33,10 +33,7 @@ script:
   - cd "../../${upstream}"
   - > 
     (DEBUG=1 DEBUG2=1 ./build.sh;
-    cd sysstats;
-    LD_LIBRARY_PATH=../../maestro/vendor/github.com/armPelionEdge/greasego/deps/lib/ go test -v;
-    cd ..;
-    cd maestroConfig;
+    cd events;
     LD_LIBRARY_PATH=../../maestro/vendor/github.com/armPelionEdge/greasego/deps/lib/ go test -v;
     cd ..;
     )
@@ -44,13 +41,7 @@ script:
 matrix:
   include:
 
-    - name: "go v1.10"
-      go: 1.10.x
-
     - name: "go v1.11"
       go: 1.11.x
-
-    - name: "go v1.12"
-      go: 1.12.x
 
 
