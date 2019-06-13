@@ -1047,15 +1047,18 @@ func TestFanout2Multi(t *testing.T) {
 				}
 			} else {
 				log.Fatalf("channel should be available. wrong.")
-			}
-			sub.ReleaseChannel()
-		}
-	})
+	latchon
+	latchon
+	latchon
+	})latchon
 
 	t.Run("listener2", func(t *testing.T) {
+		fmt.Println("listener() at t.p.")
 		t.Parallel()
 		x := 0
+		fmt.Println("listener() bf hook2 l")
 		latchon(hook2)
+		fmt.Println("listener() Af hook2 l")
 	listenLoop:
 		for {
 			fmt.Println("listener2() at top of loop.")
