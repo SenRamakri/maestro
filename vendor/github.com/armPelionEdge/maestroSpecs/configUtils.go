@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+
+	"github.com/armPelionEdge/maestro/log"
 )
 
 // Copyright (c) 2018, Arm Limited and affiliates.
@@ -97,22 +99,22 @@ type changes struct {
 func (a *ConfigAnalyzer) callGroupChanges(c *changes) {
 	hooki, ok := a.configMap.Load(c.configgroup)
 
-	fmt.Printf("callGroupChanges: hooki:%v ok: %v\n", hooki, ok)
+	log.MaestroWarnf("callGroupChanges: hooki:%v ok: %v\n", hooki, ok)
 	if ok {
 		hook, ok2 := hooki.(ConfigChangeHook)
-		fmt.Printf("callGroupChanges: hook:%v ok2: %v\n", hook, ok2)
+		log.MaestroWarnf("callGroupChanges: hook:%v ok2: %v\n", hook, ok2)
 		if ok2 {
-			fmt.Printf("callGroupChanges: %v", c.configgroup)
+			log.MaestroWarnf("callGroupChanges: %v", c.configgroup)
 			hook.ChangesStart(c.configgroup)
 			for n, fieldname := range c.fieldnames {
 				
-				fmt.Printf("callGroupChanges: SawChange: %s", fieldname)
+				log.MaestroWarnf("callGroupChanges: SawChange: %s", fieldname)
 				takeit := hook.SawChange(c.configgroup, fieldname, c.futvals[n].Interface(), c.curvals[n].Interface(), c.index[n])
 				if takeit {
 					c.curvals[n].Set(c.futvals[n])
 				}
 			}
-			fmt.Printf("callGroupChanges: ChangesComplete: %s", c.configgroup)
+			log.MaestroWarnf("callGroupChanges: ChangesComplete: %s", c.configgroup)
 			takeall := hook.ChangesComplete(c.configgroup)
 			if takeall {
 				for n := range c.curvals {
@@ -121,7 +123,7 @@ func (a *ConfigAnalyzer) callGroupChanges(c *changes) {
 			}
 		}
 	} else {
-		fmt.Printf("callGroupChanges: Unable to find an entry in config map/hook\n")
+		log.MaestroWarnf("callGroupChanges: Unable to find an entry in config map/hook\n")
 	}
 }
 
@@ -362,10 +364,10 @@ func (a *ConfigAnalyzer) DiffChanges(current interface{}, future interface{}) (i
 // will only look at field names which are in 'current' and which are public, and which have identical types.
 func (a *ConfigAnalyzer) CallChanges(current interface{}, future interface{}) (identical bool, noaction bool, err error) {
 	
-	fmt.Printf("CallChanges: enter\n")
+	log.MaestroWarnf("CallChanges: enter\n")
 	identical, noaction, allchanges, err := a.DiffChanges(current, future) 
 
-	fmt.Printf("CallChanges: DiffChanges done: %v\n", noaction)
+	log.MaestroWarnf("CallChanges: DiffChanges done: %v\n", noaction)
 	// walk through changes, calling the callbacks as needed
 	if !noaction {
 		for _, c := range allchanges {
