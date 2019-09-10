@@ -987,8 +987,8 @@ func (this *networkManagerInstance) SetupDeviceDBConfig() (err error) {
 				this.ddbConfigMonitor.AddMonitorConfig(&origNetworkConfig, &updatedNetworkConfig, DDB_NETWORK_CONFIG_NAME, configAna)
 
 				//Add config change hook for all property groups, we can use the same interface
-				var commitConfigChangeHook CommitConfigChangeHook
-				configAna.AddHook("config_commit", commitConfigChangeHook)
+				//var commitConfigChangeHook CommitConfigChangeHook
+				//configAna.AddHook("config_commit", commitConfigChangeHook)
 								
 				//Add monitor for this object
 				var updatedConfigCommit ConfigCommit
