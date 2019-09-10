@@ -365,22 +365,22 @@ func ConfigApplyHandler(jobConfigApplyRequestChan <-chan bool) {
 		log.MaestroWarnf("ConfigApplyHandler::Received a apply change message: %v\n", applyChange)
 		if(applyChange) {
 			instance = GetInstance();
-			log.MaestroWarnf("ConfigApplyHandler::Processing apply change: %v\n", instance.configCommit.ConfigCommitFlag)
+			log.MaestroWarnf("ConfigApplyHandler::Processing apply change: %v\n", instance.CurrConfigCommit.ConfigCommitFlag)
 			instance.submitConfig(instance.networkConfig)
 			//Setup the intfs using new config
 			instance.setupInterfaces();
-			instance.configCommit.ConfigCommitFlag = false
-			instance.configCommit.LastUpdateTimestamp = time.Now().Format(time.RFC850)
-			instance.configCommit.TotalCommitCountFromBoot = instance.configCommit.TotalCommitCountFromBoot + 1
+			instance.CurrConfigCommit.ConfigCommitFlag = false
+			instance.CurrConfigCommit.LastUpdateTimestamp = time.Now().Format(time.RFC850)
+			instance.CurrConfigCommit.TotalCommitCountFromBoot = instance.CurrConfigCommit.TotalCommitCountFromBoot + 1
 			//Now write out the updated commit config
-			err := instance.ddbConfigClient.Config(DDB_NETWORK_CONFIG_COMMIT_FLAG).Put(&instance.configCommit)
+			err := instance.ddbConfigClient.Config(DDB_NETWORK_CONFIG_COMMIT_FLAG).Put(&instance.CurrConfigCommit)
 			if(err == nil) {
 				log.MaestroInfof("Updating commit config object to devicedb succeeded.\n")
 			} else {
 				log.MaestroErrorf("Unable to update commit config object to devicedb\n")
 			}
 		} else {
-			log.MaestroWarnf("ConfigApplyHandler::Commit flag is false: %v\n", instance.configCommit.ConfigCommitFlag)
+			log.MaestroWarnf("ConfigApplyHandler::Commit flag is false: %v\n", instance.CurrConfigCommit.ConfigCommitFlag)
 		}
     }
 }
@@ -390,8 +390,8 @@ func ConfigApplyHandler(jobConfigApplyRequestChan <-chan bool) {
 func (cfgHook CommitConfigChangeHook) ChangesStart(configgroup string) {
 	log.MaestroWarnf("CommitChangeHook:ChangesStart: %s\n", configgroup)
 	if(configApplyRequestChan == nil) {
-		//configApplyRequestChan = make(chan bool, 10)
-		//go ConfigApplyHandler(configApplyRequestChan)
+		configApplyRequestChan = make(chan bool, 10)
+		go ConfigApplyHandler(configApplyRequestChan)
 	}
 }
 
@@ -400,8 +400,8 @@ func (cfgHook CommitConfigChangeHook) ChangesStart(configgroup string) {
 // If SawChange return true, then the value of futvalue will replace the value of current value
 func (cfgHook CommitConfigChangeHook) SawChange(configgroup string, fieldchanged string, futvalue interface{}, curvalue interface{}, index int) (acceptchange bool) {
 	log.MaestroWarnf("CommitChangeHook:SawChange: %s:%s old:%v new:%v index:%d\n", configgroup, fieldchanged, curvalue, futvalue, index)
-	//instance = GetInstance();
-	//instance.configCommit.ConfigCommitFlag = reflect.ValueOf(futvalue).Bool();
+	instance = GetInstance();
+	instance.CurrConfigCommit.ConfigCommitFlag = reflect.ValueOf(futvalue).Bool();
 	//configApplyRequestChan <- true
 	return false;//return false as we would apply only those we successfully processed
 }
