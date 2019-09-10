@@ -404,12 +404,16 @@ func (cfgHook CommitConfigChangeHook) SawChange(configgroup string, fieldchanged
 	switch(fieldchanged) {
 	case "ConfigCommitFlag":
 		instance.CurrConfigCommit.ConfigCommitFlag = reflect.ValueOf(futvalue).Bool();
+		if(instance.CurrConfigCommit.ConfigCommitFlag == true) {
+			//flag set to true, apply the new config
+			log.MaestroWarnf("\nCommitChangeHook:commit flag set, applying changes")
+			configApplyRequestChan <- true
+		}
 	case "LastUpdateTimestamp":
 	case "TotalCommitCountFromBoot":
 	default:
 		log.MaestroWarnf("\nCommitChangeHook:Unknown field: %s: old:%v new:%v\n", fieldchanged, curvalue, futvalue)
 	}	
-	//configApplyRequestChan <- true
 	return false;//return false as we would apply only those we successfully processed
 }
 
