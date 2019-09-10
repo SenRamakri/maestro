@@ -360,10 +360,11 @@ var configApplyRequestChan chan bool = nil
 //receives an updated config it submits the config and sets up the interfaces based
 //on new configuration
 func ConfigApplyHandler(jobConfigApplyRequestChan <-chan bool) {
-	instance = GetInstance();
+	log.MaestroWarnf("ConfigApplyHandler::started: %v\n", instance)
 	for applyChange := range jobConfigApplyRequestChan {
 		log.MaestroWarnf("ConfigApplyHandler::Received a apply change message: %v\n", applyChange)
 		if(applyChange) {
+			instance = GetInstance();
 			log.MaestroWarnf("ConfigApplyHandler::Processing apply change: %v\n", instance.configCommit.ConfigCommitFlag)
 			instance.submitConfig(instance.networkConfig)
 			//Setup the intfs using new config
@@ -387,7 +388,7 @@ func ConfigApplyHandler(jobConfigApplyRequestChan <-chan bool) {
 // ChangesStart is called before reporting any changes via multiple calls to SawChange. It will only be called
 // if there is at least one change to report
 func (cfgHook CommitConfigChangeHook) ChangesStart(configgroup string) {
-	log.MaestroInfof("CommitChangeHook:ChangesStart: %s\n", configgroup)
+	log.MaestroWarnf("CommitChangeHook:ChangesStart: %s\n", configgroup)
 	if(configApplyRequestChan == nil) {
 		configApplyRequestChan = make(chan bool, 10)
 		go ConfigApplyHandler(configApplyRequestChan)
@@ -408,6 +409,6 @@ func (cfgHook CommitConfigChangeHook) SawChange(configgroup string, fieldchanged
 // ChangesComplete is called when all changes for a specific configgroup tagname
 // If ChangesComplete returns true, then all changes in that group will be assigned to the current struct
 func (cfgHook CommitConfigChangeHook) ChangesComplete(configgroup string) (acceptallchanges bool) {
-	log.MaestroInfof("CommitChangeHook:ChangesComplete: %s\n", configgroup)
+	log.MaestroWarnf("CommitChangeHook:ChangesComplete: %s\n", configgroup)
 	return false; //return false as we would apply only those we successfully processed
 }
