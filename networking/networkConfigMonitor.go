@@ -367,7 +367,7 @@ func ConfigApplyHandler(jobConfigApplyRequestChan <-chan bool) {
 			log.MaestroWarnf("ConfigApplyHandler::Processing apply change: %v\n", instance.configCommit.ConfigCommitFlag)
 			instance.submitConfig(instance.networkConfig)
 			//Setup the intfs using new config
-			instance.setupInterfaces();
+			//instance.setupInterfaces();
 			instance.configCommit.ConfigCommitFlag = false
 			instance.configCommit.LastUpdateTimestamp = time.Now().Format(time.RFC850)
 			instance.configCommit.TotalCommitCountFromBoot = instance.configCommit.TotalCommitCountFromBoot + 1
