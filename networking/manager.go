@@ -43,7 +43,7 @@ import (
 	"sync"
 	"time"
 	"unsafe"
-	"runtime/debug"
+	"runtime"
 	
 	"github.com/armPelionEdge/hashmap" // thread-safe, fast hashmaps
 	"github.com/armPelionEdge/maestro/debugging"
@@ -732,10 +732,16 @@ func (this *networkManagerInstance) SetInterfaceConfigByName(ifname string, ifco
 	return
 }
 
+func printCurrStack() {
+	stackSlice := make([]byte, 4096)
+	s := runtime.Stack(stackSlice, false)
+	log.MaestroWarnf("NetworkManager: stack: %s\n", string(s))
+}
+
 func (this *networkManagerInstance) setupInterfaces() (err error) {
 
 	log.MaestroWarnf("NetworkManager: setupInterfaces\n")
-	debug.PrintStack()
+	printCurrStack()
 
 	for item := range this.byInterfaceName.Iter() {
 		if item.Value == nil {
@@ -829,7 +835,7 @@ func (this *networkManagerInstance) initDeviceDBConfig() {
 	var devicedbrunning bool = false
 
 	log.MaestroWarnf("NetworkManager: initDeviceDBConfig\n")
-	debug.PrintStack()
+	printCurrStack()
 
 	if(this.waitForDeviceDB) {
 		log.MaestroInfof("initDeviceDBConfig: Waiting for devicedb process/job\n")
@@ -875,7 +881,7 @@ func (this *networkManagerInstance) SetupDeviceDBConfig() (err error) {
 	var tlsConfig *tls.Config
 
 	log.MaestroWarnf("NetworkManager: SetupDeviceDBConfig\n")
-	debug.PrintStack()
+	printCurrStack()
 	
 	if(this.ddbConnConfig != nil) {
 		log.MaestroInfof("NetworkManager: Found valid devicedb connection config, try connecting and fetching the config from devicedb: uri:%s prefix: %s bucket:%s id:%s cert:%s\n",
