@@ -735,7 +735,7 @@ func (this *networkManagerInstance) SetInterfaceConfigByName(ifname string, ifco
 func printCurrStack() {
 	stackSlice := make([]byte, 4096)
 	s := runtime.Stack(stackSlice, false)
-	log.MaestroWarnf("NetworkManager: stack: %s\n", string(s))
+	log.MaestroWarnf("NetworkManager: stack: %s\n", stackSlice[0:s])
 }
 
 func (this *networkManagerInstance) setupInterfaces() (err error) {
