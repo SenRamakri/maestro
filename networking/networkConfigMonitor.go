@@ -400,8 +400,8 @@ func (cfgHook CommitConfigChangeHook) ChangesStart(configgroup string) {
 // If SawChange return true, then the value of futvalue will replace the value of current value
 func (cfgHook CommitConfigChangeHook) SawChange(configgroup string, fieldchanged string, futvalue interface{}, curvalue interface{}, index int) (acceptchange bool) {
 	log.MaestroWarnf("CommitChangeHook:SawChange: %s:%s old:%v new:%v index:%d\n", configgroup, fieldchanged, curvalue, futvalue, index)
-	instance = GetInstance();
-	instance.CurrConfigCommit.ConfigCommitFlag = reflect.ValueOf(futvalue).Bool();
+	//instance = GetInstance();
+	//instance.CurrConfigCommit.ConfigCommitFlag = reflect.ValueOf(futvalue).Bool();
 	//configApplyRequestChan <- true
 	return false;//return false as we would apply only those we successfully processed
 }
