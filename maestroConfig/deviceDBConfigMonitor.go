@@ -78,6 +78,7 @@ func NewDeviceDBMonitor(ddbConnConfig *DeviceDBConnConfig) (err error, ddbMonito
 //configAnalyzer object is used for comparing new and old config objects which is used by the monitor
 //when it detects a config object change
 func (ddbMonitor *DDBMonitor) AddMonitorConfig(config interface{}, updatedConfig interface{}, configName string, configAnalyzer *maestroSpecs.ConfigAnalyzer) (err error) {
+	log.MaestroWarnf("AddMonitorConfig:%s", configName)
 	go configMonitor(config, updatedConfig, configName, configAnalyzer, ddbMonitor.DDBConfigClient)
 	return
 }
@@ -94,10 +95,12 @@ func configMonitor(config interface{}, updatedConfig interface{}, configName str
 	configWatcher := configClient.Config(configName).Watch()
 	configWatcher.Run()
 
+	log.MaestroWarnf("configMonitor started for:%s", configName)
+
 	//Make a copy of original config
 	prevconfig := config
 	for {
-		//log.MaestroWarnf("configMonitor: waiting on Next:%s", configName)
+		log.MaestroWarnf("configMonitor: waiting on Next:%s", configName)
 		exists := configWatcher.Next(updatedConfig)
 
 		if !exists {
@@ -105,7 +108,7 @@ func configMonitor(config interface{}, updatedConfig interface{}, configName str
 			break
 		}
 
-		//log.MaestroWarnf("[%s] Configuration %s was updated: \nold:%+v \nnew:%v\n", time.Now(), configName, config, updatedConfig)
+		log.MaestroWarnf("[%s] Configuration %s was updated: \nold:%+v \nnew:%v\n", time.Now(), configName, config, updatedConfig)
 		same, noaction, err := configAnalyzer.CallChanges(prevconfig, updatedConfig)
 		if err != nil {
 			log.MaestroErrorf("Error from CallChanges: %s\n", err.Error())
