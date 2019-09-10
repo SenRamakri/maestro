@@ -360,7 +360,7 @@ var configApplyRequestChan chan bool = nil
 //receives an updated config it submits the config and sets up the interfaces based
 //on new configuration
 func ConfigApplyHandler(jobConfigApplyRequestChan <-chan bool) {
-	log.MaestroWarnf("ConfigApplyHandler::started: %v\n", instance)
+	log.MaestroWarnf("ConfigApplyHandler::started")
 	for applyChange := range jobConfigApplyRequestChan {
 		log.MaestroWarnf("ConfigApplyHandler::Received a apply change message: %v\n", applyChange)
 		if(applyChange) {
