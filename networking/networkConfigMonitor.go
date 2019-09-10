@@ -367,7 +367,7 @@ func ConfigApplyHandler(jobConfigApplyRequestChan <-chan bool) {
 			log.MaestroWarnf("ConfigApplyHandler::Processing apply change: %v\n", instance.configCommit.ConfigCommitFlag)
 			instance.submitConfig(instance.networkConfig)
 			//Setup the intfs using new config
-			//instance.setupInterfaces();
+			instance.setupInterfaces();
 			instance.configCommit.ConfigCommitFlag = false
 			instance.configCommit.LastUpdateTimestamp = time.Now().Format(time.RFC850)
 			instance.configCommit.TotalCommitCountFromBoot = instance.configCommit.TotalCommitCountFromBoot + 1
@@ -401,7 +401,7 @@ func (cfgHook CommitConfigChangeHook) SawChange(configgroup string, fieldchanged
 	log.MaestroWarnf("CommitChangeHook:SawChange: %s:%s old:%v new:%v index:%d\n", configgroup, fieldchanged, curvalue, futvalue, index)
 	instance = GetInstance();
 	instance.configCommit.ConfigCommitFlag = reflect.ValueOf(futvalue).Bool();
-	configApplyRequestChan <- true
+	//configApplyRequestChan <- true
 	return false;//return false as we would apply only those we successfully processed
 }
 
