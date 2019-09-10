@@ -986,8 +986,6 @@ func (this *networkManagerInstance) SetupDeviceDBConfig() (err error) {
 				log.MaestroWarnf("Adding monitor config\n")
 				this.ddbConfigMonitor.AddMonitorConfig(&origNetworkConfig, &updatedNetworkConfig, DDB_NETWORK_CONFIG_NAME, configAna)
 
-				_, ddbCommitConfigMonitor := maestroConfig.NewDeviceDBMonitor(this.ddbConnConfig)
-
 				//Add config change hook for all property groups, we can use the same interface
 				//var commitConfigChangeHook CommitConfigChangeHook
 				//configAna.AddHook("config_commit", commitConfigChangeHook)
@@ -995,7 +993,7 @@ func (this *networkManagerInstance) SetupDeviceDBConfig() (err error) {
 				//Add monitor for this object
 				var updatedConfigCommit ConfigCommit
 				log.MaestroWarnf("Adding monitor for config commit object\n")
-				ddbCommitConfigMonitor.AddMonitorConfig(&this.configCommit, &updatedConfigCommit, DDB_NETWORK_CONFIG_COMMIT_FLAG, configAna)
+				this.ddbConfigMonitor.AddMonitorConfig(&this.configCommit, &updatedConfigCommit, DDB_NETWORK_CONFIG_COMMIT_FLAG, configAna)
 			}
 		}
 	} else {

@@ -113,7 +113,7 @@ func configMonitor(config interface{}, updatedConfig interface{}, configName str
 		if err != nil {
 			log.MaestroErrorf("Error from CallChanges: %s\n", err.Error())
 		} else {
-			log.MaestroInfof("CallChanges ret same=%+v noaction=%+v\n", same, noaction)
+			log.MaestroWarnf("CallChanges ret same=%+v noaction=%+v\n", same, noaction)
 		}
 		
 		//Make a copy of previous config
