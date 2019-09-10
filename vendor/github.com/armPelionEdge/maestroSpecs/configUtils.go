@@ -115,6 +115,8 @@ func (a *ConfigAnalyzer) callGroupChanges(c *changes) {
 				}
 			}
 		}
+	} else {
+		fmt.Printf("callGroupChanges: Unable to find an entry in config map/hook\n")
 	}
 }
 
