@@ -549,17 +549,17 @@ func (this *networkManagerInstance) resetAllConfig() {
 			ifdata := (*NetworkInterfaceData)(item.Value)
 			log.MaestroDebugf("NetworkManager: found existing value for if [%s]\n", ifdata)
 			//First kill the DHCP routine if its running
-			/*
 			if(ifdata.dhcpRunning) {
 				log.MaestroWarnf("NetworkManager: resetAllConfig: Stopping DHCP routine for if %s\n", ifname)
 				ifdata.dhcpWorkerControl <- networkThreadMessage{cmd: stop_and_release_IP}
+				log.MaestroWarnf("NetworkManager: resetAllConfig: wait for shutdown\n")
 				// wait on that shutdown
 				<-ifdata.dhcpWaitOnShutdown
 				//Set the flag
 				ifdata.dhcpRunning = false
+				log.MaestroWarnf("NetworkManager: resetAllConfig: shut complete\n")
 			}
-			*/
-			
+					
 			log.MaestroDebugf("NetworkManager: Remove the interface config/settings from hashmap for if [%s]\n", ifname)
 			//Clear/Remove the interface config/settings from hashmap
 			log.MaestroWarnf("NetworkManager: resetAllConfig: Getting link for if %s\n", ifname)
@@ -572,7 +572,7 @@ func (this *networkManagerInstance) resetAllConfig() {
 				log.MaestroDebugf("NetworkManager: resetAllConfig: currentHwAddr=%v for if %s\n", currentHwAddr, ifname)
 				
 				// ok - need to bring interface down to set Mac
-				log.MaestroDebugf("NetworkManager: resetAllConfig: brining if %s down\n", ifname)
+				log.MaestroDebugf("NetworkManager: resetAllConfig: bringing if %s down\n", ifname)
 				err2 := netlink.LinkSetDown(link)
 				if err2 != nil {
 					log.MaestroErrorf("NetworkManager: resetAllConfig: failed to bring if %s down - %s\n", ifname, err2.Error())
@@ -1614,14 +1614,18 @@ DhcpLoop:
 		}
 
 	}
+	log.MaestroWarnf("NetworkManager: DHCP worker dec count")
 	this.decIfThreadCount()
 
+	log.MaestroWarnf("NetworkManager: Before getInterfaceData")
 	ifdata = this.getInterfaceData(ifname)
 	if ifdata != nil {
+		log.MaestroWarnf("NetworkManager: shutdown thread")
 		ifdata.dhcpRunning = false
 		ifdata.dhcpWorkerControl = nil
 		// tell caller that this thread has stopped
 		ifdata.dhcpWaitOnShutdown <- networkThreadMessage{cmd: shutdown_complete}
+		log.MaestroWarnf("NetworkManager: shutdown thread complete")
 	}
 
 }
