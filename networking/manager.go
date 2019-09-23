@@ -1126,6 +1126,7 @@ func (this *networkManagerInstance) doDhcp(ifname string, op maestroSpecs.NetInt
 		ifdata.dhcpRunning = true
 		// the channel can hold one next command
 		ifdata.dhcpWorkerControl = make(chan networkThreadMessage, 1)
+		ifdata.dhcpWaitOnShutdown = make(chan networkThreadMessage, 1)
 	} else {
 		log.MaestroWarnf("NetworkManager: Can't start DHCP lease routine, as interface '%s' is no longer managed!\n", ifname)
 		this.decIfThreadCount()
