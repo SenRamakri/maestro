@@ -804,7 +804,7 @@ func (this *networkManagerInstance) SetupExistingInterfaces() (err error) {
 	this.setupInterfaces();
 
 	//Try setup the device using DeviceDB config now
-	go this.initDeviceDBConfig()
+	//go this.initDeviceDBConfig()
 	
 	return
 }
@@ -917,7 +917,7 @@ func (this *networkManagerInstance) SetupDeviceDBConfig() (err error) {
 				identical, _, _, err := configAna.DiffChanges(this.networkConfig, ddbNetworkConfig)
 				if(!identical && (err == nil)) {
 					//The configs are different, lets go ahead reconfigure the intfs
-					log.MaestroInfof("New network config found from devicedb, reconfigure nework using new config\n")
+					log.MaestroDebugf("New network config found from devicedb, reconfigure nework using new config\n")
 					this.networkConfig = &ddbNetworkConfig
 					this.submitConfig(this.networkConfig)
 					//Setup the intfs using new config
