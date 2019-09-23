@@ -547,15 +547,9 @@ func (this *networkManagerInstance) resetAllConfig() {
 		log.MaestroDebugf("NetworkManager: found existing key for if [%s]\n", ifname)
 		if item.Value != nil {
 			ifdata := (*NetworkInterfaceData)(item.Value)
-			//Capture the running config
-			var ifconfig *maestroSpecs.NetIfConfigPayload
-			ifconfig = ifdata.RunningIfconfig
-			if ifconfig == nil {
-				log.MaestroErrorf("NetworkManager: resetAllConfig: Interface [%s] does not have an interface data structure.\n", ifname)
-				continue
-			}
-			log.MaestroDebugf("NetworkManager: found existing value for if [%s]\n", ifname)
+			log.MaestroDebugf("NetworkManager: found existing value for if [%s]\n", ifdata)
 			//First kill the DHCP routine if its running
+			/*
 			if(ifdata.dhcpRunning) {
 				log.MaestroWarnf("NetworkManager: resetAllConfig: Stopping DHCP routine for if %s\n", ifname)
 				ifdata.dhcpWorkerControl <- networkThreadMessage{cmd: stop_and_release_IP}
@@ -564,32 +558,30 @@ func (this *networkManagerInstance) resetAllConfig() {
 				//Set the flag
 				ifdata.dhcpRunning = false
 			}
+			*/
 			
+			log.MaestroDebugf("NetworkManager: Remove the interface config/settings from hashmap for if [%s]\n", ifname)
 			//Clear/Remove the interface config/settings from hashmap
-			if(ifconfig != nil) {
-				log.MaestroWarnf("NetworkManager: resetAllConfig: Getting link for if %s\n", ifname)
-				link, err := GetInterfaceLink(ifconfig.IfName, ifconfig.IfIndex)
-				if err == nil && link != nil {
-					log.MaestroWarnf("NetworkManager: resetAllConfig: Bring the link down and reset the HW addr for if %s\n", ifname)
-					ifname = link.Attrs().Name
-					// Bring the link down and reset the HW addr
-					currentHwAddr := link.Attrs().HardwareAddr
-					log.MaestroDebugf("NetworkManager: resetAllConfig: currentHwAddr=%v for if %s\n", currentHwAddr, ifname)
-					
-					// ok - need to bring interface down to set Mac
-					log.MaestroDebugf("NetworkManager: resetAllConfig: brining if %s down\n", ifname)
-					err2 := netlink.LinkSetDown(link)
-					if err2 != nil {
-						log.MaestroErrorf("NetworkManager: resetAllConfig: failed to bring if %s down - %s\n", ifname, err2.Error())
-					}
-					log.MaestroDebugf("NetworkManager: resetAllConfig: resetting MAC address for %s\n", ifname)
-					err2 = netlink.LinkSetHardwareAddr(link, nil)
-					if err2 != nil {
-						log.MaestroErrorf("NetworkManager: resetAllConfig: failed to set MAC address on if %s - %s\n", ifname, err2.Error())
-					}
+			log.MaestroWarnf("NetworkManager: resetAllConfig: Getting link for if %s\n", ifname)
+			link, err := GetInterfaceLink(ifname, -1)
+			if err == nil && link != nil {
+				log.MaestroWarnf("NetworkManager: resetAllConfig: Bring the link down and reset the HW addr for if %s\n", ifname)
+				ifname = link.Attrs().Name
+				// Bring the link down and reset the HW addr
+				currentHwAddr := link.Attrs().HardwareAddr
+				log.MaestroDebugf("NetworkManager: resetAllConfig: currentHwAddr=%v for if %s\n", currentHwAddr, ifname)
+				
+				// ok - need to bring interface down to set Mac
+				log.MaestroDebugf("NetworkManager: resetAllConfig: brining if %s down\n", ifname)
+				err2 := netlink.LinkSetDown(link)
+				if err2 != nil {
+					log.MaestroErrorf("NetworkManager: resetAllConfig: failed to bring if %s down - %s\n", ifname, err2.Error())
 				}
-			} else {
-				log.MaestroWarnf("NetworkManager: resetAllConfig: ifconfig is nil for if %s\n", ifname)
+				log.MaestroDebugf("NetworkManager: resetAllConfig: resetting MAC address for %s\n", ifname)
+				err2 = netlink.LinkSetHardwareAddr(link, nil)
+				if err2 != nil {
+					log.MaestroErrorf("NetworkManager: resetAllConfig: failed to set MAC address on if %s - %s\n", ifname, err2.Error())
+				}
 			}
 		}
 	}
