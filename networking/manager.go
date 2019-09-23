@@ -824,6 +824,7 @@ func (this *networkManagerInstance) initDeviceDBConfig() {
 	var pid int = -1
 	var devicedbrunning bool = false
 
+	log.MaestroWarnf("initDeviceDBConfig: initializing devicedb connection, if possible\n")
 	if(this.waitForDeviceDB) {
 		log.MaestroInfof("initDeviceDBConfig: Waiting for devicedb process/job\n")
 		for totalWaitTime < MAX_DEVICEDB_WAIT_TIME_IN_SECS {
@@ -866,7 +867,7 @@ func (this *networkManagerInstance) initDeviceDBConfig() {
 func (this *networkManagerInstance) SetupDeviceDBConfig() (err error) {
 	//TLS config to connect to devicedb
 	var tlsConfig *tls.Config
-	
+	log.MaestroWarnf("SetupDeviceDBConfig: connecting to devicedb\n")
 	if(this.ddbConnConfig != nil) {
 		log.MaestroInfof("NetworkManager: Found valid devicedb connection config, try connecting and fetching the config from devicedb: uri:%s prefix: %s bucket:%s id:%s cert:%s\n",
 				this.ddbConnConfig.DeviceDBUri, this.ddbConnConfig.DeviceDBPrefix, this.ddbConnConfig.DeviceDBBucket, this.ddbConnConfig.RelayId, this.ddbConnConfig.CaChainCert)
@@ -1130,6 +1131,7 @@ func (this *networkManagerInstance) doDhcp(ifname string, op maestroSpecs.NetInt
 DhcpLoop:
 	for {
 		debugging.DEBUG_OUT("DhcpLoop to - if %s\n", ifname)
+		log.MaestroWarnf("DhcpLoop to - if %s\n", ifname)
 		select {
 		case statechange := <-ifdata.interfaceChange:
 			// happens if the interface goes up or down
@@ -1138,13 +1140,13 @@ DhcpLoop:
 				// the interface has gone down. So we want to re-run our
 				// default route out and DNS setup, to choose another interface if one
 				// is available.
-
+				log.MaestroWarnf("DhcpLoop state_LOWER_DOWN\n")	
 				ok, ifpref, r := this.primaryTable.findPreferredRoute()
 				if ok {
-					log.MaestroDebugf("NetworkManager: preferred default route is on if %s - %+v\n", ifpref, r)
+					log.MaestroWarnf("NetworkManager:(DhcpLoop) preferred default route is on if %s - %+v\n", ifpref, r)
 					err = this.primaryTable.setPreferredRoute(!this.networkConfig.DontOverrideDefaultRoute)
 					if err == nil {
-						log.MaestroInfof("NetworkManager: set default route to %s %+v\n", ifpref, r)
+						log.MaestroWarnf("NetworkManager: set default route to %s %+v\n", ifpref, r)
 					} else {
 						log.MaestroErrorf("NetworkManager: error setting preferred route: %s\n", err.Error())
 					}
@@ -1156,6 +1158,7 @@ DhcpLoop:
 				// we call this without just sending ourselves an event, b/c we want the timeouts to be
 				// very fast in this case.
 				debugging.DEBUG_OUT("DhcpLoop - Saw LOWER_UP change - if %s. Checking for new DHCP?\n", ifname)
+				log.MaestroWarnf("DhcpLoop - Saw LOWER_UP change - if %s. Checking for new DHCP?\n", ifname)	
 				ifdata = this.getInterfaceData(ifname)
 				if ifdata != nil {
 
