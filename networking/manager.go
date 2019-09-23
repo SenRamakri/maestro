@@ -1349,6 +1349,7 @@ DhcpLoop:
 								nmLogErrorf("Erroring sending gratuitous ARP: %s\n", arperr.Error())
 							} else {
 								nmLogDebugf("Gratuitous ARP sent for IP %s\n", result.IPV4)
+								log.MaestroWarnf("Gratuitous ARP sent for IP %s\n", result.IPV4)
 							}
 						} else {
 							nmLogErrorf("SetupInterfaceFromLease() has invalid results array or no address for if %s", ifname)
@@ -1360,8 +1361,9 @@ DhcpLoop:
 						debugging.DEBUG_OUT("@DhcpLoop - setup gw and dns\n")
 						// setup default route
 						routeset, gw, err := setupDefaultRouteInPrimaryTable(this, ifdata.RunningIfconfig, leaseinfo)
+						log.MaestroDebugf("NetworkManager: setupDefaultRouteInPrimaryTable: %v %v %v\n", routeset, gw, err)
 						if routeset {
-							log.MaestroInfof("NetworkManager: default route from DHCP: %s - recorded in primary table\n", gw)
+							log.MaestroDebugf("NetworkManager: default route from DHCP: %s - recorded in primary table\n", gw)
 						}
 						if err != nil {
 							log.MaestroErrorf("NetworkManager: error setting adding default route to primaryTable via DHCP: %s\n", err.Error())
@@ -1566,12 +1568,12 @@ DhcpLoop:
 
 func (mgr *networkManagerInstance) finalizePrimaryRoutes() {
 	ok, ifpref, r := mgr.primaryTable.findPreferredRoute()
-	log.MaestroWarnf("NetworkManager: finalizePrimaryRoutes: if %s - %+v (ok=%v)\n", ifpref, r, ok)
+	log.MaestroDebugf("NetworkManager: finalizePrimaryRoutes: if %s - %+v (ok=%v)\n", ifpref, r, ok)
 	if ok {
 		log.MaestroDebugf("NetworkManager: preferred default route is on if %s - %+v\n", ifpref, r)
 		err := mgr.primaryTable.setPreferredRoute(!mgr.networkConfig.DontOverrideDefaultRoute)
 		if err == nil {
-			log.MaestroInfof("NetworkManager: set default route to %s %+v\n", ifpref, r)
+			log.MaestroDebugf("NetworkManager: set default route to %s %+v\n", ifpref, r)
 		} else {
 			log.MaestroErrorf("NetworkManager: error setting preferred route: %s\n", err.Error())
 		}
