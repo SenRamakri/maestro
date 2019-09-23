@@ -804,7 +804,7 @@ func (this *networkManagerInstance) SetupExistingInterfaces() (err error) {
 	this.setupInterfaces();
 
 	//Try setup the device using DeviceDB config now
-	//go this.initDeviceDBConfig()
+	go this.initDeviceDBConfig()
 	
 	return
 }
@@ -1816,12 +1816,13 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 					// remove address
 				case maestroSpecs.OP_UPDATE_ADDRESS:
 					// TODO !! - need to validate config
-
+					log.MaestroDebugf("NetworkManager: Handling OP_UPDATE_ADDRESS")	
 					var ifdata *NetworkInterfaceData
 					// first, save this record. Even if the interface does not exist, if it does
 					// come up then we will set it up.
 					ifdata = mgr.getOrNewInterfaceData(ifconfig.IfName)
 					debugging.DEBUG_OUT("past getOrNewInterfaceData(%s) - %+v\n", ifconfig.IfName, ifdata)
+					log.MaestroDebugf("NetworkManager: past getOrNewInterfaceData(%s) - %+v\n", ifconfig.IfName, ifdata)	
 					ifdata.StoredIfconfig = ifconfig
 					err = mgr.commitInterfaceData(ifconfig.IfName)
 					if err != nil {
@@ -1829,28 +1830,32 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 						errout = err
 						return
 					}
+					log.MaestroDebugf("NetworkManager: after mgr.commitInterfaceData")	
 					// second, determine if that interface exists, and get it's index and name (one is required to be known)
 					//					ifname, ifindex, err := GetInterfaceIndexAndName(ifconfig.IfName, ifconfig.IfIndex)
 					var ifname string
 					var ifindex int
+					log.MaestroDebugf("NetworkManager: Before GetInterfaceLink")	
 					link, err := GetInterfaceLink(ifconfig.IfName, ifconfig.IfIndex)
 					if err == nil && link != nil {
 						ifname = link.Attrs().Name
 						ifindex = link.Attrs().Index
 						// first see if a hardware address should be set
+						log.MaestroDebugf("NetworkManager: first see if a hardware address should be set")	
 						if len(ifconfig.HwAddr) > 0 {
 							currentHwAddr := link.Attrs().HardwareAddr
+							log.MaestroDebugf("NetworkManager: currentHwAddr=%v", currentHwAddr)
 							if len(currentHwAddr) < 1 || (currentHwAddr.String() != ifconfig.HwAddr) {
 								log.MaestroDebugf("NetworkManager: looks like mac address for if %s is new or different than set. changing.\n", ifname)
 								newHwAddr, err2 := net.ParseMAC(ifconfig.HwAddr)
 								if err2 == nil {
 									// ok - need to bring interface down to set Mac
-									log.MaestroInfof("NetworkManager: brining if %s down\n", ifname)
+									log.MaestroDebugf("NetworkManager: brining if %s down\n", ifname)
 									err2 = netlink.LinkSetDown(link)
 									if err2 != nil {
 										log.MaestroErrorf("NetworkManager: failed to bring if %s down - %s\n", ifname, err2.Error())
 									}
-									log.MaestroInfof("NetworkManager: setting if %s MAC address to %s\n", ifname, ifconfig.HwAddr)
+									log.MaestroDebugf("NetworkManager: setting if %s MAC address to %s\n", ifname, ifconfig.HwAddr)
 									err2 = netlink.LinkSetHardwareAddr(link, newHwAddr)
 									if err2 != nil {
 										log.MaestroErrorf("NetworkManager: failed to set MAC address on if %s - %s\n", ifname, err2.Error())
