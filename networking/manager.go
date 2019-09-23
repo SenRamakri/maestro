@@ -534,7 +534,7 @@ func updateIfConfigFromStored(netdata *NetworkInterfaceData) (ok bool, err error
 	return
 }
 
-func (this *networkManagerInstance) resetAllConfig() {
+func (this *networkManagerInstance) resetLinks() {
 	log.MaestroDebugf("NetworkManager: resetAllConfig: reset all network links\n")
 	//This function brings all the intfs down and puts everything back in pristine state
 	for item := range this.byInterfaceName.Iter() {
@@ -546,23 +546,9 @@ func (this *networkManagerInstance) resetAllConfig() {
 		ifname, _ = item.Key.(string)
 		log.MaestroDebugf("NetworkManager: found existing key for if [%s]\n", ifname)
 		if item.Value != nil {
-			ifdata := (*NetworkInterfaceData)(item.Value)
-			log.MaestroDebugf("NetworkManager: found existing value for if [%s]\n", ifdata)
-			//First kill the DHCP routine if its running
-			if(ifdata.dhcpRunning) {
-				log.MaestroWarnf("NetworkManager: resetAllConfig: Stopping DHCP routine for if %s\n", ifname)
-				ifdata.dhcpWorkerControl <- networkThreadMessage{cmd: stop_and_release_IP}
-				log.MaestroWarnf("NetworkManager: resetAllConfig: wait for shutdown\n")
-				// wait on that shutdown
-				<-ifdata.dhcpWaitOnShutdown
-				//Set the flag
-				ifdata.dhcpRunning = false
-				log.MaestroWarnf("NetworkManager: resetAllConfig: shut complete\n")
-			}
-					
+			//ifdata := (*NetworkInterfaceData)(item.Value)
 			log.MaestroDebugf("NetworkManager: Remove the interface config/settings from hashmap for if [%s]\n", ifname)
 			//Clear/Remove the interface config/settings from hashmap
-			log.MaestroWarnf("NetworkManager: resetAllConfig: Getting link for if %s\n", ifname)
 			link, err := GetInterfaceLink(ifname, -1)
 			if err == nil && link != nil {
 				log.MaestroWarnf("NetworkManager: resetAllConfig: Bring the link down and reset the HW addr for if %s\n", ifname)
@@ -577,27 +563,19 @@ func (this *networkManagerInstance) resetAllConfig() {
 				if err2 != nil {
 					log.MaestroErrorf("NetworkManager: resetAllConfig: failed to bring if %s down - %s\n", ifname, err2.Error())
 				}
-				log.MaestroDebugf("NetworkManager: resetAllConfig: resetting MAC address for %s\n", ifname)
-				//Build a all zero address to reset
-				zeroHwAddr, err2 := net.ParseMAC("00:00:00:00:00:00")
-				if err2 != nil {
-					log.MaestroErrorf("NetworkManager: resetAllConfig: failed to build zero MAC address for if %s - %s\n", ifname, err2.Error())
-				} else {
-					err2 = netlink.LinkSetHardwareAddr(link, zeroHwAddr)
-					if err2 != nil {
-						log.MaestroErrorf("NetworkManager: resetAllConfig: failed to set MAC address on if %s - %s\n", ifname, err2.Error())
-					}
-				}
+				//Now we can remove the entry from hashmap
+				this.byInterfaceName.Del(item.Key)
 			}
 		}
 	}
+	log.MaestroDebugf("NetworkManager: resetAllConfig: reset all network links complete\n")
 }
 
 func (this *networkManagerInstance) submitConfig(config *maestroSpecs.NetworkConfigPayload) {
 	this.networkConfig = config
 
 	//reset all current config if this function is called again
-	this.resetAllConfig()
+	this.resetLinks()
 
 	// NOTE: this is only for the config file initial start
 	// NOTE: the database must already be loaded and read
