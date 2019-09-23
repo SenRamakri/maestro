@@ -132,6 +132,8 @@ func (table *routingTable) isIfUp(ifname string) (up bool, err error) {
 func (table *routingTable) findPreferredRoute() (ok bool, ifname string, route *netlink.Route) {
 	bestPrio := maestroSpecs.MaxRoutePriority
 
+	log.MaestroWarn("RouteTable: findPreferredRoute")
+
 	var rPrio, r *routePrio
 	var name string
 	var ok2, ok3 bool
@@ -149,6 +151,7 @@ func (table *routingTable) findPreferredRoute() (ok bool, ifname string, route *
 			// reset all routes to not active
 			r.active = false
 			// at the very least, we found 1 route, even if it's down
+			log.MaestroWarn("RouteTable: at the very least, we found 1 route, even if it's down")
 			ok = true
 		}
 		return true
@@ -156,13 +159,16 @@ func (table *routingTable) findPreferredRoute() (ok bool, ifname string, route *
 
 	table.defaultRoutes.Range(check)
 	if ok {
+		log.MaestroWarn("RouteTable: adding default route")
 		if rPrio == nil {
+			log.MaestroWarn("RouteTable: adding nil route")
 			table.lock.Lock()
 			table.primaryDefaultRouteIf = ""
 			table.oldDefaultRoute = table.defaultRoute
 			table.defaultRoute = nil
 			table.lock.Unlock()
 		} else {
+			log.MaestroWarn("RouteTable: adding active route")
 			rPrio.active = true
 			ifname = name
 			route = rPrio.route
@@ -188,7 +194,9 @@ func (table *routingTable) setPreferredRoute(removeDefaultRoute bool) (err error
 	//	if table.oldDefaultRoute != table.defaultRoute {
 	route := table.defaultRoute
 	table.lock.Unlock()
+	log.MaestroWarnf("RouteTable: route: %v", route)
 	if route != nil {
+		log.MaestroWarn("RouteTable: Adding default route1")
 		err = netlink.RouteAdd(route)
 		if err != nil && err.Error() == "file exists" && removeDefaultRoute {
 			// get the link index for this interface
@@ -211,7 +219,7 @@ func (table *routingTable) setPreferredRoute(removeDefaultRoute bool) (err error
 				err = fmt.Errorf("Could not delete default route: %s", err2.Error())
 				return
 			}
-
+			log.MaestroWarn("RouteTable: Adding default route2")
 			err = netlink.RouteAdd(route)
 		}
 	}

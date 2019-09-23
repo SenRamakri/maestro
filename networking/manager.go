@@ -1563,6 +1563,7 @@ DhcpLoop:
 
 func (mgr *networkManagerInstance) finalizePrimaryRoutes() {
 	ok, ifpref, r := mgr.primaryTable.findPreferredRoute()
+	log.MaestroWarnf("NetworkManager: finalizePrimaryRoutes: if %s - %+v (ok=%v)\n", ifpref, r, ok)
 	if ok {
 		log.MaestroDebugf("NetworkManager: preferred default route is on if %s - %+v\n", ifpref, r)
 		err := mgr.primaryTable.setPreferredRoute(!mgr.networkConfig.DontOverrideDefaultRoute)
