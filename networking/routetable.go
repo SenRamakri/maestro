@@ -76,6 +76,7 @@ func (table *routingTable) addDefaultRouteForInterface(ifname string, prio int, 
 }
 
 func (table *routingTable) removeDefaultRouteForInterface(ifname string) {
+	log.MaestroWarn("NetworkManager: removeDefaultRouteForInterface called")
 	table.defaultRoutes.Delete(ifname)
 }
 

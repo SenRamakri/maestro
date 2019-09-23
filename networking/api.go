@@ -1048,6 +1048,8 @@ func GetInterfaceLink(ifname string, ifindex int) (ret netlink.Link, err error) 
 // To understand "default table" - read more here:
 // https://www.thomas-krenn.com/en/wiki/Two_Default_Gateways_on_One_System
 func RemoveDefaultRoute() (err error) {
+
+	log.MaestroWarn("NetworkManager: RemoveDefaultRoute called")
 	route := &netlink.Route{
 		Dst: nil,
 		Gw:  nil,

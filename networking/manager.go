@@ -534,8 +534,70 @@ func updateIfConfigFromStored(netdata *NetworkInterfaceData) (ok bool, err error
 	return
 }
 
+func (this *networkManagerInstance) resetAllConfig() {
+	log.MaestroDebugf("NetworkManager: resetAllConfig: reset all network links\n")
+	//This function brings all the intfs down and puts everything back in pristine state
+	for item := range this.byInterfaceName.Iter() {
+		if item.Value == nil {
+			debugging.DEBUG_OUT("NetworkManager: resetAllConfig: Invalid Entry in hashmap - have null value pointer\n")
+			continue
+		}
+		ifname := "<interface name>"
+		ifname, _ = item.Key.(string)
+		log.MaestroDebugf("NetworkManager: found existing key for if [%s]\n", ifname)
+		if item.Value != nil {
+			ifdata := (*NetworkInterfaceData)(item.Value)
+			if ifdata == nil {
+				log.MaestroErrorf("NetworkManager: resetAllConfig: Interface [%s] does not have an interface data structure.\n", ifname)
+				continue
+			}
+			log.MaestroDebugf("NetworkManager: found existing value for if [%s]\n", ifname)
+			//First kill the DHCP routine if its running
+			if(ifdata.dhcpRunning) {
+				log.MaestroWarnf("NetworkManager: resetAllConfig: Stopping DHCP routine for if %s\n", ifname)
+				ifdata.dhcpWorkerControl <- networkThreadMessage{cmd: stop_and_release_IP}
+				// wait on that shutdown
+				<-ifdata.dhcpWaitOnShutdown
+			}
+			
+			//Clear/Remove the interface config/settings from hashmap
+			var ifconfig *maestroSpecs.NetIfConfigPayload
+			ifconfig = ifdata.RunningIfconfig
+			if(ifconfig != nil) {
+				log.MaestroWarnf("NetworkManager: resetAllConfig: Getting link for if %s\n", ifname)
+				link, err := GetInterfaceLink(ifconfig.IfName, ifconfig.IfIndex)
+				if err == nil && link != nil {
+					log.MaestroWarnf("NetworkManager: resetAllConfig: Bring the link down and reset the HW addr for if %s\n", ifname)
+					ifname = link.Attrs().Name
+					// Bring the link down and reset the HW addr
+					currentHwAddr := link.Attrs().HardwareAddr
+					log.MaestroDebugf("NetworkManager: resetAllConfig: currentHwAddr=%v for if %s\n", currentHwAddr, ifname)
+					
+					// ok - need to bring interface down to set Mac
+					log.MaestroDebugf("NetworkManager: resetAllConfig: brining if %s down\n", ifname)
+					err2 := netlink.LinkSetDown(link)
+					if err2 != nil {
+						log.MaestroErrorf("NetworkManager: resetAllConfig: failed to bring if %s down - %s\n", ifname, err2.Error())
+					}
+					log.MaestroDebugf("NetworkManager: resetAllConfig: resetting MAC address for %s\n", ifname)
+					err2 = netlink.LinkSetHardwareAddr(link, nil)
+					if err2 != nil {
+						log.MaestroErrorf("NetworkManager: resetAllConfig: failed to set MAC address on if %s - %s\n", ifname, err2.Error())
+					}
+				}
+			} else {
+				log.MaestroWarnf("NetworkManager: resetAllConfig: ifconfig is nil for if %s\n", ifname)
+			}
+		}
+	}
+}
+
 func (this *networkManagerInstance) submitConfig(config *maestroSpecs.NetworkConfigPayload) {
 	this.networkConfig = config
+
+	//reset all current config if this function is called again
+	this.resetAllConfig()
+
 	// NOTE: this is only for the config file initial start
 	// NOTE: the database must already be loaded and read
 	// should only be called once. Is only called by InitNetworkManager()
@@ -1890,8 +1952,11 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 							// if ifdata != nil {
 							debugging.DEBUG_OUT("ok, running goDhcp for if %s\n", ifname)
 							mgr.watchInterface(ifconfig.IfName)
-							go mgr.doDhcp(ifname, requestedOp)
-							// }
+							if(!ifdata.dhcpRunning) {
+								go mgr.doDhcp(ifname, requestedOp)
+							} else {
+								log.MaestroWarnf("goDhcp for if %s\n already running, skipping new instance", ifname)
+							}
 						} else {
 							// assign static IP
 
