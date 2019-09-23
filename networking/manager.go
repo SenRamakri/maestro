@@ -578,9 +578,15 @@ func (this *networkManagerInstance) resetAllConfig() {
 					log.MaestroErrorf("NetworkManager: resetAllConfig: failed to bring if %s down - %s\n", ifname, err2.Error())
 				}
 				log.MaestroDebugf("NetworkManager: resetAllConfig: resetting MAC address for %s\n", ifname)
-				err2 = netlink.LinkSetHardwareAddr(link, nil)
+				//Build a all zero address to reset
+				zeroHwAddr, err2 := net.ParseMAC("00:00:00:00:00:00")
 				if err2 != nil {
-					log.MaestroErrorf("NetworkManager: resetAllConfig: failed to set MAC address on if %s - %s\n", ifname, err2.Error())
+					log.MaestroErrorf("NetworkManager: resetAllConfig: failed to build zero MAC address for if %s - %s\n", ifname, err2.Error())
+				} else {
+					err2 = netlink.LinkSetHardwareAddr(link, zeroHwAddr)
+					if err2 != nil {
+						log.MaestroErrorf("NetworkManager: resetAllConfig: failed to set MAC address on if %s - %s\n", ifname, err2.Error())
+					}
 				}
 			}
 		}
@@ -1956,6 +1962,7 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 							debugging.DEBUG_OUT("ok, running goDhcp for if %s\n", ifname)
 							mgr.watchInterface(ifconfig.IfName)
 							if(!ifdata.dhcpRunning) {
+								log.MaestroInfof("Starting DhcpLoop for %s", ifname)
 								go mgr.doDhcp(ifname, requestedOp)
 							} else {
 								log.MaestroWarnf("goDhcp for if %s\n already running, skipping new instance", ifname)
