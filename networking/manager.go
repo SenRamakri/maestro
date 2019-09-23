@@ -547,7 +547,10 @@ func (this *networkManagerInstance) resetAllConfig() {
 		log.MaestroDebugf("NetworkManager: found existing key for if [%s]\n", ifname)
 		if item.Value != nil {
 			ifdata := (*NetworkInterfaceData)(item.Value)
-			if ifdata == nil {
+			//Capture the running config
+			var ifconfig *maestroSpecs.NetIfConfigPayload
+			ifconfig = ifdata.RunningIfconfig
+			if ifconfig == nil {
 				log.MaestroErrorf("NetworkManager: resetAllConfig: Interface [%s] does not have an interface data structure.\n", ifname)
 				continue
 			}
@@ -558,11 +561,11 @@ func (this *networkManagerInstance) resetAllConfig() {
 				ifdata.dhcpWorkerControl <- networkThreadMessage{cmd: stop_and_release_IP}
 				// wait on that shutdown
 				<-ifdata.dhcpWaitOnShutdown
+				//Set the flag
+				ifdata.dhcpRunning = false
 			}
 			
 			//Clear/Remove the interface config/settings from hashmap
-			var ifconfig *maestroSpecs.NetIfConfigPayload
-			ifconfig = ifdata.RunningIfconfig
 			if(ifconfig != nil) {
 				log.MaestroWarnf("NetworkManager: resetAllConfig: Getting link for if %s\n", ifname)
 				link, err := GetInterfaceLink(ifconfig.IfName, ifconfig.IfIndex)
@@ -933,7 +936,7 @@ func (this *networkManagerInstance) SetupDeviceDBConfig() (err error) {
 	if(this.ddbConnConfig != nil) {
 		log.MaestroInfof("NetworkManager: Found valid devicedb connection config, try connecting and fetching the config from devicedb: uri:%s prefix: %s bucket:%s id:%s cert:%s\n",
 				this.ddbConnConfig.DeviceDBUri, this.ddbConnConfig.DeviceDBPrefix, this.ddbConnConfig.DeviceDBBucket, this.ddbConnConfig.RelayId, this.ddbConnConfig.CaChainCert)
-		//Device DB config uses deviceid as the relay_id, so uset that toset the hostname
+		//Device DB config uses deviceid as the relay_id, so uset that to set the hostname
 		log.MaestroWarnf("NetworkManager: Setting hostname: %s\n", this.ddbConnConfig.RelayId)
 		syscall.Sethostname([]byte(this.ddbConnConfig.RelayId))
 		var ddbNetworkConfig maestroSpecs.NetworkConfigPayload
@@ -984,6 +987,9 @@ func (this *networkManagerInstance) SetupDeviceDBConfig() (err error) {
 					this.submitConfig(this.networkConfig)
 					//Setup the intfs using new config
 					this.setupInterfaces();
+					//Set the hostname again as we reconfigured the network
+					log.MaestroWarnf("NetworkManager: Again setting hostname: %s\n", this.ddbConnConfig.RelayId)
+					syscall.Sethostname([]byte(this.ddbConnConfig.RelayId))
 				} else {
 					log.MaestroInfof("New network config found from devicedb, but its same as boot config, no need to re-configure\n")
 				}
