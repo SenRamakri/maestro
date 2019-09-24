@@ -1689,7 +1689,7 @@ Outer:
 							if err != nil {
 								nmLogErrorf("watchInterfaces() - Error calling stopInterfaceMonitor(LinkSubscribe) %s - details: %s\n", work.ifname, err.Error())
 							} else {
-								nmLogSuccessf("watchInterfaces() - Succeeded stopping interface monitor for %s\n", work.ifname)
+								nmLogSuccessf("watchInterfaces() - Succeeded subscribing interface monitors for %s\n", work.ifname)
 							}
 						} else {
 							nmLogWarnf("watchInterfaces() - interface link %s appear to already be watched", work.ifname)
@@ -1816,9 +1816,9 @@ Outer:
 							}
 							err = netlink.LinkSubscribe(ch, ifdata.stopInterfaceMonitor)
 							if err != nil {
-								nmLogErrorf("watchInterfaces() - Error calling (LinkSubscribe) stopInterfaceMonitor %s - details: %s\n", ifname, err.Error())
+								nmLogErrorf("watchInterfaces() - Error calling LinkSubscribe %s - details: %s\n", ifname, err.Error())
 							} else {
-								nmLogSuccessf("watchInterfaces() - Calling (LinkSubscribe) stopInterfaceMonitor succeeded: %s\n", ifname)
+								nmLogSuccessf("watchInterfaces() - Calling LinkSubscribe succeeded: %s\n", ifname)
 							}
 
 							if ifdata.interfaceChange != nil {
@@ -1972,14 +1972,6 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 								<-ifdata.dhcpWaitOnShutdown
 							}
 
-							//Set the link up if its down
-							err := netlink.LinkSetUp(link)
-							if err != nil {
-								log.MaestroErrorf("NetworkManager: failed to bring if %s up while doing static config - %s\n", ifname, err.Error())
-							} else {
-								log.MaestroInfof("NetworkManager:  if %s is up for static config\n", ifname)
-							}
-
 							debugging.DEBUG_OUT("Setting up static IP for if %s\n", ifname)
 
 							confs := []*maestroSpecs.NetIfConfigPayload{}
@@ -1992,6 +1984,15 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 								debugging.DEBUG_OUT("NetworkManager: Failed to setup static address on interface %s - %s\n", ifname, err.Error())
 							} else {
 								log.MaestroSuccessf("Network Manager: Static address set on %s of %s\n", ifname, confs[0].IPv4Addr)
+								//Start watching the interface
+								mgr.watchInterface(ifconfig.IfName)
+								//Set the link up if its down
+								err := netlink.LinkSetUp(link)
+								if err != nil {
+									log.MaestroErrorf("NetworkManager: failed to bring if %s up while doing static config - %s\n", ifname, err.Error())
+								} else {
+									log.MaestroInfof("NetworkManager:  Link set up for if %s\n", ifname)
+								}
 								_, err = addDefaultRoutesToPrimaryTable(mgr, confs)
 								if(err != nil) {
 									log.MaestroErrorf("NetworkManager: Failed to add default route for %s - %s\n", ifname, err.Error())
@@ -1999,7 +2000,6 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 								if ifdata != nil {
 									ifdata.CurrentIPv4Addr = results[0].ipv4
 								}
-								mgr.watchInterface(ifconfig.IfName)
 								if len(results) > 0 && results[0].ipv4 != nil {
 									arperr := arp.SendGratuitous(&arp.Gratuitous{
 										IfaceName: ifconfig.IfName,
