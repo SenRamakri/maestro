@@ -1993,6 +1993,7 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 								} else {
 									log.MaestroInfof("NetworkManager:  Link set up for if %s\n", ifname)
 								}
+								log.MaestroInfof("NetworkManager:  Adding primary routes %v\n", confs)
 								_, err = addDefaultRoutesToPrimaryTable(mgr, confs)
 								if(err != nil) {
 									log.MaestroErrorf("NetworkManager: Failed to add default route for %s - %s\n", ifname, err.Error())

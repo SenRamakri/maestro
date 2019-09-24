@@ -1339,6 +1339,8 @@ func addDefaultRoutesToPrimaryTable(inst *networkManagerInstance, ifs []*maestro
 	for n, configif := range ifs {
 		results[n].IfName = configif.IfName
 		results[n].IfIndex = configif.IfIndex
+		log.MaestroWarnf("NetworkManager: addDefaultRoutesToPrimaryTable: Processing %s \n", configif.IfName)
+
 		// no ifname, ok let's find it via Index
 		if len(configif.IfName) < 1 {
 			for _, link := range linklist {
@@ -1385,12 +1387,14 @@ func addDefaultRoutesToPrimaryTable(inst *networkManagerInstance, ifs []*maestro
 		}
 
 		if len(configif.DefaultGateway) > 0 {
+			log.MaestroWarnf("NetworkManager: addDefaultRoutesToPrimaryTable: %s - %s\n", configif.IfName, configif.DefaultGateway)
 			ip := net.ParseIP(configif.DefaultGateway)
 			if ip != nil {
 				route := &netlink.Route{
 					Dst: nil,
 					Gw:  ip,
 				}
+				log.MaestroWarnf("NetworkManager: addDefaultRoutesToPrimaryTable setting: %s - %s\n", configif.IfName, configif.DefaultGateway)
 				inst.primaryTable.addDefaultRouteForInterface(configif.IfName, configif.RoutePriority, route, ifup)
 			} else {
 				iferr := &NetworkAPIError{
