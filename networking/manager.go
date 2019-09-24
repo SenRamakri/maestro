@@ -564,7 +564,7 @@ func (this *networkManagerInstance) resetLinks() {
 			//Clear/Remove the interface config/settings from hashmap
 			link, err := GetInterfaceLink(ifname, -1)
 			if err == nil && link != nil {
-				log.MaestroWarnf("NetworkManager: resetAllConfig: Bring the link down and reset the HW addr for if %s\n", ifname)
+				log.MaestroWarnf("NetworkManager: resetAllConfig: Bring the link down for %s\n", ifname)
 				ifname = link.Attrs().Name
 				// Bring the link down and reset the HW addr
 				currentHwAddr := link.Attrs().HardwareAddr
@@ -2001,6 +2001,14 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 									}
 								} else {
 									nmLogErrorf("SetupStaticInterfaces() has invalid results array or no address for if %s\n", ifname)
+								}
+
+								//Set the link up if its down
+								err := netlink.LinkSetUp(link)
+								if err != nil {
+									log.MaestroErrorf("NetworkManager: failed to bring if %s up while doing static config - %s\n", ifname, err.Error())
+								} else {
+									log.MaestroInfof("NetworkManager:  if %s is up for static config\n", ifname)
 								}
 							}
 						}
