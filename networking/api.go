@@ -1395,7 +1395,16 @@ func addDefaultRoutesToPrimaryTable(inst *networkManagerInstance, ifs []*maestro
 					Gw:  ip,
 				}
 				log.MaestroWarnf("NetworkManager: addDefaultRoutesToPrimaryTable setting: %s - %s\n", configif.IfName, configif.DefaultGateway)
-				inst.primaryTable.addDefaultRouteForInterface(configif.IfName, configif.RoutePriority, route, ifup)
+				err = inst.primaryTable.addDefaultRouteForInterface(configif.IfName, configif.RoutePriority, route, ifup)
+				if(err != nil) {
+					log.MaestroWarnf("NetworkManager: addDefaultRoutesToPrimaryTable failed: %s\n", err.Error())
+					iferr := &NetworkAPIError{
+						Code:      ERROR_INVALID_SETTINGS,
+						Errstring: fmt.Sprintf("Failed setting default route for %s", configif.IfName),
+						IfName:    configif.IfName,
+					}
+					results[n].Err = iferr
+				}
 			} else {
 				iferr := &NetworkAPIError{
 					Code:      ERROR_INVALID_SETTINGS,
