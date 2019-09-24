@@ -1972,6 +1972,14 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 								<-ifdata.dhcpWaitOnShutdown
 							}
 
+							//Set the link up if its down
+							err := netlink.LinkSetUp(link)
+							if err != nil {
+								log.MaestroErrorf("NetworkManager: failed to bring if %s up while doing static config - %s\n", ifname, err.Error())
+							} else {
+								log.MaestroInfof("NetworkManager:  if %s is up for static config\n", ifname)
+							}
+
 							debugging.DEBUG_OUT("Setting up static IP for if %s\n", ifname)
 
 							confs := []*maestroSpecs.NetIfConfigPayload{}
@@ -1985,6 +1993,9 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 							} else {
 								log.MaestroSuccessf("Network Manager: Static address set on %s of %s\n", ifname, confs[0].IPv4Addr)
 								_, err = addDefaultRoutesToPrimaryTable(mgr, confs)
+								if(err != nil) {
+									log.MaestroErrorf("NetworkManager: Failed to add default route for %s - %s\n", ifname, err.Error())
+								}
 								if ifdata != nil {
 									ifdata.CurrentIPv4Addr = results[0].ipv4
 								}
@@ -2001,14 +2012,6 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 									}
 								} else {
 									nmLogErrorf("SetupStaticInterfaces() has invalid results array or no address for if %s\n", ifname)
-								}
-
-								//Set the link up if its down
-								err := netlink.LinkSetUp(link)
-								if err != nil {
-									log.MaestroErrorf("NetworkManager: failed to bring if %s up while doing static config - %s\n", ifname, err.Error())
-								} else {
-									log.MaestroInfof("NetworkManager:  if %s is up for static config\n", ifname)
 								}
 							}
 						}
