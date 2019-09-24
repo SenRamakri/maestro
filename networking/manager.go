@@ -1997,6 +1997,10 @@ func (mgr *networkManagerInstance) SubmitTask(task *tasks.MaestroTask) (errout e
 								_, err = addDefaultRoutesToPrimaryTable(mgr, confs)
 								if(err != nil) {
 									log.MaestroErrorf("NetworkManager: Failed to add default route for %s - %s\n", ifname, err.Error())
+								} else {
+									log.MaestroErrorf("NetworkManager: Finalize default route for %s\n", ifname)
+									//Finalize the primary routes
+									mgr.finalizePrimaryRoutes()
 								}
 								if ifdata != nil {
 									ifdata.CurrentIPv4Addr = results[0].ipv4
