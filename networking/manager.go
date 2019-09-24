@@ -593,6 +593,7 @@ func (this *networkManagerInstance) submitConfig(config *maestroSpecs.NetworkCon
 		var storedifconfig NetworkInterfaceData
 		err := this.networkConfigDB.Get(ifname, &storedifconfig)
 		if err != nil {
+			log.MaestroInfof("NetworkManager: submitConfig: Get failed: %v\n", err)
 			if err != stow.ErrNotFound {
 				log.MaestroErrorf("NetworkManager: problem with database on if %s - Get: %s\n", ifname, err.Error())
 			} else {
@@ -615,8 +616,10 @@ func (this *networkManagerInstance) submitConfig(config *maestroSpecs.NetworkCon
 			}
 		} else {
 			// entry existed, so override
+			log.MaestroInfof("NetworkManager: submitConfig: Get passed: %v\n", storedifconfig)
 			if ifconf.Existing == "replace" {
 				// same as above, brand new
+				log.MaestroInfof("NetworkManager: submitConfig: same as above, brand new")
 				newconf := newIfData(ifconf.IfName, ifconf)
 				this.byInterfaceName.Set(ifname, unsafe.Pointer(newconf))
 				err = this.commitInterfaceData(ifname)
@@ -628,6 +631,7 @@ func (this *networkManagerInstance) submitConfig(config *maestroSpecs.NetworkCon
 
 			} else if ifconf.Existing == "override" {
 				debugging.DEBUG_OUT("ifconfig: %+v\n", ifconf)
+				log.MaestroInfof("NetworkManager: submitConfig: same as above, brand new ifconfig: %+v\n", ifconf)
 				// override fields where the incoming config has data
 				if storedifconfig.StoredIfconfig != nil {
 					debugging.DEBUG_OUT("merging...\n")
